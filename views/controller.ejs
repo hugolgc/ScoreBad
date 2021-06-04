@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr" class="bg-gray-900 text-white">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Score par @hugolgc</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com"> 
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>body { font-family: 'Rubik', sans-serif; }</style>
+</head>
+<body class="relative h-screen flex items-center p-4">
+  
+  <main class="w-full space-y-16">
+    <section class="space-y-4">
+      <article v-for="(player, index) in players" :key="index" class="flex items-center space-x-2">
+        <div class="flex-auto flex space-x-3 pt-1 pr-1 pb-1 pl-3 bg-gray-800 rounded-lg">
+          <textarea v-model="player.name" @change="setName(index)" class="w-full flex items-center bg-transparent appearance-none resize-none focus:outline-none"></textarea>
+          <div class="space-y-1">
+            <button @click="setScore(index, true)" class="block h-10 w-9 rounded-md bg-green-600 text-xl focus:outline-none">+</button>
+            <button @click="setScore(index, false)" class="block h-10 w-9 rounded-md bg-red-600 text-2xl focus:outline-none">-</button>
+          </div>
+        </div>
+        <div class="flex-none flex items-center text-2xl text-center font-medium">
+          <p v-for="(score, stand) in player.scores" :key="stand" :class="['w-9', (player.select === stand) ? 'text-white' : 'text-gray-500', (player.select === stand && player.serve) ? 'underline' : '']" @click="player.select = stand">{{ (score === null) ? '-' : score }}</p>
+        </div>
+      </article>
+    </section>
+    <section class="space-y-4">
+      <article class="flex space-x-4">
+        <input type="text" placeholder="Code de l’écran joueurs" class="h-12 w-full px-3 bg-gray-800 rounded-lg appearance-none focus:outline-none">
+        <button class="block h-12 w-12 flex-none rounded-md bg-green-600 text-xl focus:outline-none">+</button>
+      </article>
+      <article class="flex space-x-4">
+        <input type="text" placeholder="Code de l’écran scores" value="6E5CPY" class="h-12 w-full px-3 bg-gray-800 rounded-lg appearance-none focus:outline-none">
+        <button class="block h-12 w-12 flex-none rounded-md bg-yellow-600 focus:outline-none">Live</button>
+      </article>
+    </section>
+  </main>
+
+  <p class="block absolute top-0 right-0 left-0 pt-4 text-gray-500 text-center">Remettre à zéro</p>
+  <a href="https://www.linkedin.com/in/hugolgc/" target="_blank" class="block absolute right-0 bottom-0 left-0 pb-8 text-gray-500 text-center">Créé par @hugolgc</a>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/vue.js"></script>
+  <script>
+
+  // const socket = io()
+
+  const Controller = {
+    data() {
+      return {
+        players: [{
+          name: '',
+          scores: [0, null, null],
+          serve: true,
+          select: 0
+        }, 
+        {
+          name: 'Romain Penel',
+          scores: [0, null, null],
+          serve: false,
+          select: 0
+        }],
+        viewers: []
+      }
+    },
+    methods: {
+      setScore(index, type) {
+        if (type) {
+          if (this.players[index].scores[this.players[index].select] === null) this.players[index].scores[this.players[index].select] = 0
+          else this.players[index].scores[this.players[index].select] = (this.players[index].scores[this.players[index].select]++ > 29) ? 30 : this.players[index].scores[this.players[index].select]
+          this.setServe(index, true)
+        } else {
+          if (this.players[index].scores[this.players[index].select] !== null && this.players[index].scores[this.players[index].select]-- < 1) this.players[index].scores[this.players[index].select] = null
+        }
+        // return socket
+      },
+      setServe(index, type) {
+        this.players[index].serve = true
+        this.players[index ? 0 : 1].serve = false
+      },
+      setName(index) {
+        console.log('player' + index + ' name change !')
+      }
+    }
+  }
+
+  const app = Vue.createApp(Controller)
+  app.mount('body')
+  
+  </script>
+</body>
+</html>

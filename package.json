@@ -1,0 +1,17 @@
+{
+  "name": "score",
+  "version": "1.0.0",
+  "description": "Application de score pour le Badminton",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "@hugolgc",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "randomstring": "^1.2.1",
+    "socket.io": "^4.1.2"
+  }
+}
