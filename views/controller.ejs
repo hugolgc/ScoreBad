@@ -18,7 +18,7 @@
     <section class="space-y-4">
       <article v-for="(player, index) in players" :key="index" class="flex items-center space-x-2">
         <div class="flex-auto flex space-x-3 pt-1 pr-1 pb-1 pl-3 bg-gray-800 rounded-lg">
-          <textarea v-model="player.name" @change="setName(index)" class="w-full flex items-center bg-transparent appearance-none resize-none focus:outline-none"></textarea>
+          <textarea v-model="player.name" @click="setServe(index)" @change="setName(index)" class="w-full flex items-center bg-transparent appearance-none resize-none focus:outline-none"></textarea>
           <div class="space-y-1">
             <button @click="setScore(index, true)" class="block h-10 w-9 rounded-md bg-green-600 text-xl focus:outline-none">+</button>
             <button @click="setScore(index, false)" class="block h-10 w-9 rounded-md bg-red-600 text-2xl focus:outline-none">-</button>
@@ -73,13 +73,13 @@
         if (type) {
           if (this.players[index].scores[this.players[index].select] === null) this.players[index].scores[this.players[index].select] = 0
           else this.players[index].scores[this.players[index].select] = (this.players[index].scores[this.players[index].select]++ > 29) ? 30 : this.players[index].scores[this.players[index].select]
-          this.setServe(index, true)
+          this.setServe(index)
         } else {
           if (this.players[index].scores[this.players[index].select] !== null && this.players[index].scores[this.players[index].select]-- < 1) this.players[index].scores[this.players[index].select] = null
         }
         // return socket
       },
-      setServe(index, type) {
+      setServe(index) {
         this.players[index].serve = true
         this.players[index ? 0 : 1].serve = false
       },
