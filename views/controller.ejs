@@ -105,10 +105,7 @@
       },
       setData() {
         this.viewers.forEach(viewer => {
-          if (viewer.code !== null) {
-            console.log('Send SetData', viewer.code, this.players)
-            this.socket.emit('setData', {code: viewer.code, players: this.players})
-          }
+          if (viewer.code !== null) this.socket.emit('setData', {code: viewer.code, players: this.players})
         })
       },
       reset() {
@@ -124,7 +121,7 @@
           serve: false,
           select: 0
         }]
-        setData()
+        this.setData()
       }
     },
     mounted() {
