@@ -1,20 +1,84 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="bg-black">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>Score par @hugolgc</title>
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>
+    h2.names { font-size: 10vw; }
+    h2.scores { font-size: 18vw; }
+  </style>
 </head>
 <body>
   
-  <h1>Viewer</h1>
+  <main v-if="type === null" class="h-screen flex justify-center items-center">
+    <a href="/control">
+      <h2 class="scores text-white font-bold">{{ code }}</h2>
+    </a>
+  </main>
+
+  <main v-if="type === 0" class="h-screen flex flex-col">
+    <article v-for="(player, index) in players" :key="index" :class="['flex-1 flex items-center p-8 overflow-hidden', (index) ? 'text-yellow-500' : 'text-green-500']">
+      <h2 class="names font-bold leading-tight">{{ player.name }}</h2>
+    </article>
+  </main>
+
+  <main v-if="type === 1" class="h-screen flex flex-col">
+    <section class="flex-1 grid grid-cols-3">
+      <article v-for="(score, index) in players[0].scores" :key="index" :class="['flex justify-center items-center', (players[0].serve && players[0].select === index) ? 'bg-green-500 text-black' : 'text-green-500']">
+        <h2 class="scores font-bold">{{ score }}</h2>
+      </article>
+    </section>
+    <section class="flex-1 grid grid-cols-3">
+      <article v-for="(score, index) in players[1].scores" :key="index" :class="['flex justify-center items-center', (players[1].serve && players[1].select === index) ? 'bg-yellow-500 text-black' : 'text-yellow-500']">
+        <h2 class="scores font-bold">{{ score }}</h2>
+      </article>
+    </section>
+  </main>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/vue.js"></script>
   <script>
 
-  const socket = io()
-  
+  const Viewer = {
+    data() {
+      return {
+        socket: io(),
+        code: null,
+        type: null,
+        controller: null,
+        players: []
+      }
+    },
+    mounted() {
+      this.socket.on('setCode', code => {
+        if (this.code === null) this.code = code
+      })
+      this.socket.on('setViewer', ({controller, code, type}) => {
+        if (code === this.code && !this.controller) {
+          this.controller = true
+          this.type = type
+          this.socket.emit('setController', {
+            viewer: this.code,
+            code: controller,
+            type: this.type
+          })
+        }
+      })
+      this.socket.on('setData', ({code, players}) => {
+        if (code === this.code) this.players = players
+        console.log('setData', this.players)
+      })
+    }
+  }
+
+  const app = Vue.createApp(Viewer)
+  app.mount('body')
+
   </script>
 </body>
 </html>

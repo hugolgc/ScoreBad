@@ -3,11 +3,15 @@ const app = express()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 const randomstring = require('randomstring')
-
-
 let screens = []
-let matchs = []
 
+const getCode = (io) => {
+  let code = null
+  do {
+    code = randomstring.generate(4).toUpperCase()
+  } while (screens.includes(code))
+  io.emit('setCode', code)
+}
 
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
@@ -18,8 +22,15 @@ app.get('/control', (req, res) => res.render('controller'))
 
 
 io.on('connection', socket => {
-  console.log(randomstring.generate(6))
+
+  getCode(io)
+
+  socket.on('setViewer', data => io.emit('setViewer', data))
+  socket.on('setController', data => io.emit('setController', data))
+  socket.on('setData', data => io.emit('setData', data))
+  
   socket.on('disconnect', () => console.log('leave user'))
+
 })
 
 

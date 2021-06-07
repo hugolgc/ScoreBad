@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/tailwind.css">
   <style>body { font-family: 'Rubik', sans-serif; }</style>
 </head>
-<body class="relative h-screen flex items-center p-4">
+<body class="relative h-screen max-w-lg mx-auto flex items-center p-4">
   
   <main class="w-full space-y-16">
     <section class="space-y-4">
@@ -25,34 +25,40 @@
           </div>
         </div>
         <div class="flex-none flex items-center text-2xl text-center font-medium">
-          <p v-for="(score, stand) in player.scores" :key="stand" :class="['w-9', (player.select === stand) ? 'text-white' : 'text-gray-500', (player.select === stand && player.serve) ? 'underline' : '']" @click="player.select = stand">{{ (score === null) ? '-' : score }}</p>
+          <p v-for="(score, stand) in player.scores" :key="stand" :class="['w-9', (player.select === stand) ? 'text-white' : 'text-gray-500', (player.select === stand && player.serve) ? 'underline' : '']" @click="player.select = stand; setData()">{{ (score === null) ? '-' : score }}</p>
         </div>
       </article>
     </section>
     <section class="space-y-4">
-      <article class="flex space-x-4">
-        <input type="text" placeholder="Code de l’écran joueurs" class="h-12 w-full px-3 bg-gray-800 rounded-lg appearance-none focus:outline-none">
-        <button class="block h-12 w-12 flex-none rounded-md bg-green-600 text-xl focus:outline-none">+</button>
-      </article>
-      <article class="flex space-x-4">
-        <input type="text" placeholder="Code de l’écran scores" value="6E5CPY" class="h-12 w-full px-3 bg-gray-800 rounded-lg appearance-none focus:outline-none">
-        <button class="block h-12 w-12 flex-none rounded-md bg-yellow-600 focus:outline-none">Live</button>
+      <article v-for="(viewer, index) in viewers" :key="index" class="flex items-center space-x-4 px-3 bg-gray-800 rounded-lg">
+        <input v-model="viewer.code" @change="setViewer(index)" type="text" :placeholder="['Code de l’écran ', (index === 0) ? 'joueurs' : 'scores']" maxlength="4" class="h-12 w-full bg-transparent appearance-none focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" :class="['h-6 w-6 flex-none', (viewer.state === 0) ? 'text-red-500' : (viewer.state === 1) ? 'text-yellow-500' : 'text-green-500']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+        </svg>
       </article>
     </section>
   </main>
 
-  <p class="block absolute top-0 right-0 left-0 pt-4 text-gray-500 text-center">Remettre à zéro</p>
+  <p @click="reset()" class="absolute top-0 right-0 left-0 pt-4 text-gray-500 text-center cursor-pointer">Remettre à zéro</p>
   <a href="https://www.linkedin.com/in/hugolgc/" target="_blank" class="block absolute right-0 bottom-0 left-0 pb-8 text-gray-500 text-center">Créé par @hugolgc</a>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vue.js"></script>
   <script>
 
-  // const socket = io()
-
   const Controller = {
     data() {
       return {
+        socket: io(),
+        code: null,
+        viewers: [{
+          code: null,
+          state: 0
+        },
+        {
+          code: null,
+          state: 0
+        }],
         players: [{
           name: '',
           scores: [0, null, null],
@@ -60,12 +66,11 @@
           select: 0
         }, 
         {
-          name: 'Romain Penel',
+          name: '',
           scores: [0, null, null],
           serve: false,
           select: 0
-        }],
-        viewers: []
+        }]
       }
     },
     methods: {
@@ -77,15 +82,59 @@
         } else {
           if (this.players[index].scores[this.players[index].select] !== null && this.players[index].scores[this.players[index].select]-- < 1) this.players[index].scores[this.players[index].select] = null
         }
-        // return socket
+        this.setData()
       },
       setServe(index) {
         this.players[index].serve = true
         this.players[index ? 0 : 1].serve = false
+        this.setData()
       },
       setName(index) {
-        console.log('player' + index + ' name change !')
+        this.setData()
+      },
+      setViewer(index) {
+        this.socket.emit('setViewer', {
+          controller: this.code,
+          code: this.viewers[index].code,
+          type: index
+        })
+        this.viewers[index].state = 1
+        setTimeout(() => {
+          if (this.viewers[index].state === 1) this.viewers[index].state = 0
+        }, 2000)
+      },
+      setData() {
+        this.viewers.forEach(viewer => {
+          if (viewer.code !== null) {
+            console.log('Send SetData', viewer.code, this.players)
+            this.socket.emit('setData', {code: viewer.code, players: this.players})
+          }
+        })
+      },
+      reset() {
+        this.players = [{
+          name: '',
+          scores: [0, null, null],
+          serve: true,
+          select: 0
+        }, 
+        {
+          name: '',
+          scores: [0, null, null],
+          serve: false,
+          select: 0
+        }]
+        setData()
       }
+    },
+    mounted() {
+      this.socket.on('setCode', code => {
+        if (this.code === null) this.code = code
+      })
+      this.socket.on('setController', ({ viewer, code, type }) => {
+        if (code === this.code) this.viewers[type].state = 2
+        this.socket.emit('setData', {code: viewer, players: this.players})
+      })
     }
   }
 
