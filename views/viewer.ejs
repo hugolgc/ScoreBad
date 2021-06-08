@@ -55,6 +55,7 @@
     data() {
       return {
         socket: io(),
+        controllerCode: null,
         code: null,
         type: null,
         controller: null,
@@ -67,6 +68,7 @@
       })
       this.socket.on('setViewer', ({controller, code, type}) => {
         if (code === this.code && !this.controller) {
+          this.controllerCode = controller
           this.controller = true
           this.type = type
           this.socket.emit('setController', {
@@ -77,7 +79,14 @@
         }
       })
       this.socket.on('setData', ({code, players}) => {
-        if (code === this.code) this.players = players
+        if (code === this.code && this.controller) this.players = players
+      })
+      this.socket.on('leaveScreen', code => {
+        if (this.controllerCode === code) {
+          this.controllerCode = null
+          this.controller = null
+          this.type = null
+        }
       })
     }
   }

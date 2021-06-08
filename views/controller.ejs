@@ -25,7 +25,7 @@
           </div>
         </div>
         <div class="flex-none flex items-center text-2xl text-center font-medium">
-          <p v-for="(score, stand) in player.scores" :key="stand" :class="['w-9', (player.select === stand) ? 'text-white' : 'text-gray-500', (player.select === stand && player.serve) ? 'underline' : '']" @click="player.select = stand; setData()">{{ (score === null) ? '-' : score }}</p>
+          <p v-for="(score, stand) in player.scores" :key="stand" :class="['w-9 cursor-pointer', (player.select === stand) ? 'text-white' : 'text-gray-500', (player.select === stand && player.serve) ? 'underline' : '']" @click="player.select = stand; setData()">{{ (score === null) ? '-' : score }}</p>
         </div>
       </article>
     </section>
@@ -101,7 +101,7 @@
         this.viewers[index].state = 1
         setTimeout(() => {
           if (this.viewers[index].state === 1) this.viewers[index].state = 0
-        }, 2000)
+        }, 6000)
       },
       setData() {
         this.viewers.forEach(viewer => {
@@ -131,6 +131,13 @@
       this.socket.on('setController', ({ viewer, code, type }) => {
         if (code === this.code) this.viewers[type].state = 2
         this.socket.emit('setData', {code: viewer, players: this.players})
+      })
+      this.socket.on('leaveScreen', code => {
+        for (let index = 0; index < this.viewers.length; index++) {
+          if (this.viewers[index].code === code) {
+            this.viewers[index] = {code: null, state: 0}
+          }
+        }
       })
     }
   }
